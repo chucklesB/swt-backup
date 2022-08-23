@@ -3,8 +3,9 @@
 # swt-backup.sh - Use rsync to backup data to a network location
 
 # Backup server settings
-BACKUPSERVER="user@127.0.0.1"
-REMOTEPATH="/media/backups"
+BACKUPUSER="swtadmin"
+BACKUPSERVER="192.168.90.2"
+REMOTEPATH="/mnt/data/backups"
 
 # Styling
 bold=$(tput bold)
@@ -46,9 +47,9 @@ findWindowsPartitions() {
     i=0
     for PARTITION in ${PARTITIONS[@]}; do
         # Create mountpoint
-	PART=$(echo "${PARTITIONS[${i}]}" | awk '{print $1}')
-	partname="$(basename ${PART})"
-	mountpoint="/mnt/${partname}"
+        PART=$(echo "${PARTITIONS[${i}]}" | awk '{print $1}')
+        partname="$(basename ${PART})"
+        mountpoint="/mnt/${partname}"
         if [ ! -d ${mountpoint} ]; then
             mkdir ${mountpoint}
             if [ $? -ne 0 ] || [ ! -d ${mountpoint} ]; then
@@ -57,9 +58,9 @@ findWindowsPartitions() {
             fi
         fi
 
-	# Mount the partition
+        # Mount the partition
         sudo mount -o ro ${PART} ${mountpoint}
-	if [ $? -ne 0 ]; then
+        if [ $? -ne 0 ]; then
             # Try ntfsfix before failing
             sudo ntfsfix ${PART}
             sudo mount -o ro ${PART} ${mountpoint}
@@ -84,8 +85,8 @@ findWindowsPartitions() {
                 fi
 
                 i=$((${i}+1))
-	    fi
-        else
+            fi
+            else
             # Look for Windows and Users directories
             if [ -d ${mountpoint}/Windows ]; then
                 echo -e "\n${PART}: Found Windows directory"
@@ -188,8 +189,8 @@ runBackup() {
             [Yy]* ) \
                 for part in ${SELECTEDPARTS[@]//${bold}/}; do
                     # Create mountpoint
-		    partname="$(basename ${part})"
-		    mountpoint="/mnt/${partname}"
+                    partname="$(basename ${part})"
+                    mountpoint="/mnt/${partname}"
                     if [ ! -d ${mountpoint} ]; then
                         mkdir ${mountpoint}
                         if [ $? -ne 0 ] || [ ! -d ${mountpoint} ]; then
@@ -206,9 +207,20 @@ runBackup() {
                     fi
 
                     # Run the backup
-		    rsync -rltv --mkpath --exclude Windows --exclude WINDOWS --exclude '*.sys' --exclude '*.SYS' "${mountpoint}/" ${BACKUPSERVER}:"${REMOTEPATH}/${BACKUPPATH// /\\ }/${partname}"
+                    # Backup the Users folder if it exists
+                    if [ -d ${mountpoint}/Users ]; then
+                        rsync -rltv --mkpath "${mountpoint}/Users/" ${BACKUPUSER}@${BACKUPSERVER}:"${REMOTEPATH}/${BACKUPPATH// /\\ }/part${i}/Users"
+                    fi
+
+                    # Backup the registry if it exists
+                    if [ -d ${mountpoint}/Windows/System32/config ]; then
+                        rsync -rltv --mkpath "${mountpoint}/Windows/System32/config/" ${BACKUPUSER}@${BACKUPSERVER}:"${REMOTEPATH}/${BACKUPPATH// /\\ }/part${i}/Windows/System32/config"
+                    fi
+
+                    # Backup the remaining data
+                    rsync -rltv --mkpath --exclude Users --exclude Windows --exclude WINDOWS --exclude Windows.old --exclude '*.sys' --exclude '*.SYS' "${mountpoint}/" ${BACKUPUSER}@${BACKUPSERVER}:"${REMOTEPATH}/${BACKUPPATH// /\\ }/${partname}"
                     if [ $? -ne 0 ]; then
-			sudo umount ${part}
+                        sudo umount ${part}
                         if [ $? -ne 0 ]; then
                             read -p "Error unmounting ${part}. Press enter to exit."
                             exit 1
