@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# swt-backup.sh - Use rsync to backup data to a network location
+# ntfs-backup.sh - Use rsync to backup data to a network location
 
 # Backup server settings
-BACKUPUSER="swtadmin"
-BACKUPSERVER="192.168.90.2"
-REMOTEPATH="/mnt/data/backups"
+BACKUPUSER=""
+BACKUPSERVER=""
+REMOTEPATH=""
 
 # Styling
 bold=$(tput bold)
@@ -20,17 +20,17 @@ main() {
     promptCustomerName
     promptComputerName
     runBackup
-}    
+}
 
 printBanner() {
     clear
     echo '
-      ___________      _____________ __________                __                 
-     /   _____/  \    /  \__    ___/ \______   \_____    ____ |  | ____ ________  
-     \_____  \\   \/\/   / |    |     |    |  _/\__  \ _/ ___\|  |/ /  |  \____ \ 
-     /        \\        /  |    |     |    |   \ / __ \\  \___|    <|  |  /  |_> >
-    /_______  / \__/\  /   |____|     |______  /(____  /\___  >__|_ \____/|   __/ 
-            \/       \/                      \/      \/     \/     \/     |__|    
+ ______________________________________        __________                __                 
+ \      \__    ___/\_   _____/   _____/        \______   \_____    ____ |  | ____ ________  
+ /   |   \|    |    |    __) \_____  \   ______ |    |  _/\__  \ _/ ___\|  |/ /  |  \____ \ 
+/    |    \    |    |     \  /        \ /_____/ |    |   \ / __ \\  \___|    <|  |  /  |_> >
+\____|__  /____|    \___  / /_______  /         |______  /(____  /\___  >__|_ \____/|   __/ 
+        \/              \/          \/                 \/      \/     \/     \/     |__|    
     '
 }
 
